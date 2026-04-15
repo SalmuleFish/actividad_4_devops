@@ -52,9 +52,10 @@ Resources:
   AppServer:
     Type: AWS::EC2::Instance
     Properties:
-      InstanceType: t3.micro
-      ImageId: ami-0e2c8ccd4e02226ad
+      InstanceType: t2.micro
+      ImageId: ami-0c101f26f147fa7fd
       SubnetId: !Ref PublicSubnet
+      IamInstanceProfile: LabInstanceProfile
       SecurityGroupIds:
         - !Ref TransporteSG
       Tags:
@@ -95,7 +96,7 @@ Resources:
   BucketEvidenciasTransporte:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "transporte-final-pruebas-${AWS::AccountId"
+      BucketName: !Sub "transporte-final-pruebas-${AWS::AccountId}"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
