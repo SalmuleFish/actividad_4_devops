@@ -48,7 +48,7 @@ Resources:
           ToPort: 5000
           CidrIp: 0.0.0.0/0
 
-  # --- CÓMPUTO (EC2) ---
+  # --- COMPUTO (EC2) ---
   AppServer:
     Type: AWS::EC2::Instance
     Properties:
@@ -96,7 +96,7 @@ Resources:
   BucketEvidenciasTransporte:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "evidencias-transporte-${AWS::AccountId}"
+      BucketName: !Sub "evidencias-transporte-v2-${AWS::Region}-${AWS::AccountId}"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
