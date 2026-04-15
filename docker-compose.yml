@@ -4,4 +4,6 @@ services:
     build: ./app
     ports:
       - "5000:5000"
+    environment:
+      - BUCKET_EVIDENCIAS=evidencias-transporte-act4devops-sml
     restart: always
