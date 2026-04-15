@@ -53,11 +53,11 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t3.micro
-      ImageId: ami-0e2c8ccd4e02226ad # Amazon Linux 2023 (us-east-1)
+      ImageId: ami-0e2c8ccd4e02226ad
       SubnetId: !Ref PublicSubnet
       SecurityGroupIds:
         - !Ref TransporteSG
-      IamInstanceProfile: LabInstanceProfile # Requerido en AWS Academy para SSM
+      IamInstanceProfile: LabInstanceProfile
       Tags:
         - Key: Name
           Value: Servidor-Logistica
@@ -68,14 +68,11 @@ Resources:
           yum install -y docker git
           systemctl start docker
           systemctl enable docker
-          # Instalamos Docker Compose (Plugin V2)
           mkdir -p /usr/local/lib/docker/cli-plugins/
           curl -SL https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
           chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 
-          # Despliegue de la App
           cd /home/ec2-user
-          # REEMPLAZA ESTO CON TU URL DE REPO REAL
           git clone https://github.com/SalmuleFish/actividad_4_devops.git
           cd actividad_4_devops
           docker compose up -d
