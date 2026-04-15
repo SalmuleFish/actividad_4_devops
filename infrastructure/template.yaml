@@ -57,7 +57,6 @@ Resources:
       SubnetId: !Ref PublicSubnet
       SecurityGroupIds:
         - !Ref TransporteSG
-      IamInstanceProfile: LabInstanceProfile
       Tags:
         - Key: Name
           Value: Servidor-Logistica
@@ -96,7 +95,7 @@ Resources:
   BucketEvidenciasTransporte:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "evidencias-transporte-v2-${AWS::Region}-${AWS::AccountId}"
+      BucketName: !Sub "transporte-final-pruebas-${AWS::AccountId"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
