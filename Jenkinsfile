@@ -27,7 +27,7 @@ pipeline {
                     python3 -m venv venv || true
                     . venv/bin/activate
                     pip install -r app/requirements.txt pytest
-                    pytest tests/ || echo "Ojo: Fallaron los tests pero seguimos para probar el deploy"
+                    pytest tests/ || echo "Fallaron los tests pero seguimos para probar el deploy"
                 '''
             }
         }

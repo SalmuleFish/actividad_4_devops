@@ -44,11 +44,11 @@ Resources:
           ToPort: 80
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
-          FromPort: 5000 # Puerto de nuestra App
+          FromPort: 5000
           ToPort: 5000
           CidrIp: 0.0.0.0/0
 
-  # --- COMPUTO (EC2) ---
+  # --- CÓMPUTO (EC2) ---
   AppServer:
     Type: AWS::EC2::Instance
     Properties:
@@ -57,7 +57,7 @@ Resources:
       SubnetId: !Ref PublicSubnet
       SecurityGroupIds:
         - !Ref TransporteSG
-      IamInstanceProfile: LabInstanceProfile # Importante para usar SSM en Academy
+      IamInstanceProfile: LabInstanceProfile # Requerido en AWS Academy para SSM
       Tags:
         - Key: Name
           Value: Servidor-Logistica
@@ -68,11 +68,14 @@ Resources:
           yum install -y docker git
           systemctl start docker
           systemctl enable docker
+          # Instalamos Docker Compose (Plugin V2)
           mkdir -p /usr/local/lib/docker/cli-plugins/
           curl -SL https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
           chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
 
+          # Despliegue de la App
           cd /home/ec2-user
+          # REEMPLAZA ESTO CON TU URL DE REPO REAL
           git clone https://github.com/SalmuleFish/actividad_4_devops.git
           cd actividad_4_devops
           docker compose up -d
@@ -89,10 +92,21 @@ Resources:
         - AttributeName: UnidadID
           KeyType: HASH
       ProvisionedThroughput:
-        定:
-          ReadCapacityUnits: 5
-          WriteCapacityUnits: 5
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
 
+  # --- ALMACENAMIENTO (S3) ---
+  BucketEvidenciasTransporte:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "evidencias-transporte-${AWS::AccountId}"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+# --- SALIDAS (OUTPUTS) ---
 Outputs:
   InstanceId:
     Description: ID de la instancia desplegada
@@ -100,17 +114,6 @@ Outputs:
   VpcId:
     Description: ID de la VPC
     Value: !Ref TransporteVPC
-
-  # --- ALMACENAMIENTO DE EVIDENCIAS ---
-  BucketEvidenciasTransporte:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Sub "evidencias-transporte-${AWS::AccountId}" # Nombre único usando tu ID de cuenta
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        BlockPublicPolicy: true
-        IgnorePublicAcls: true
-        RestrictPublicBuckets: true
-      Tags:
-        - Key: Name
-          Value: Bucket-Evidencias-Fotos
+  BucketName:
+    Description: Nombre del bucket de S3 creado
+    Value: !Ref BucketEvidenciasTransporte
