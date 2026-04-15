@@ -1,0 +1,116 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Infraestructura Unificada - Empresa de Transporte S.A.
+
+Resources:
+  # --- REDES (VPC) ---
+  TransporteVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: VPC-Transporte
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref TransporteVPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref TransporteVPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: Subnet-Publica-Transporte
+
+  # --- SEGURIDAD ---
+  TransporteSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Permite trafico HTTP y acceso via SSM
+      VpcId: !Ref TransporteVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 5000 # Puerto de nuestra App
+          ToPort: 5000
+          CidrIp: 0.0.0.0/0
+
+  # --- COMPUTO (EC2) ---
+  AppServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.micro
+      ImageId: ami-0e2c8ccd4e02226ad # Amazon Linux 2023 (us-east-1)
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds:
+        - !Ref TransporteSG
+      IamInstanceProfile: LabInstanceProfile # Importante para usar SSM en Academy
+      Tags:
+        - Key: Name
+          Value: Servidor-Logistica
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install -y docker git
+          systemctl start docker
+          systemctl enable docker
+          mkdir -p /usr/local/lib/docker/cli-plugins/
+          curl -SL https://github.com/docker/compose/releases/download/v2.20.2/docker-compose-linux-x86_64 -o /usr/local/lib/docker/cli-plugins/docker-compose
+          chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+          cd /home/ec2-user
+          git clone https://github.com/SalmuleFish/actividad_4_devops.git
+          cd actividad_4_devops
+          docker compose up -d
+
+  # --- DATOS (DynamoDB) ---
+  RastreoUnidadesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: RastreoUnidades
+      AttributeDefinitions:
+        - AttributeName: UnidadID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: UnidadID
+          KeyType: HASH
+      ProvisionedThroughput:
+        定:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+
+Outputs:
+  InstanceId:
+    Description: ID de la instancia desplegada
+    Value: !Ref AppServer
+  VpcId:
+    Description: ID de la VPC
+    Value: !Ref TransporteVPC
+
+  # --- ALMACENAMIENTO DE EVIDENCIAS ---
+  BucketEvidenciasTransporte:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "evidencias-transporte-${AWS::AccountId}" # Nombre único usando tu ID de cuenta
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        - Key: Name
+          Value: Bucket-Evidencias-Fotos
